@@ -1,0 +1,354 @@
+INTRODUCTION:
+**********Introduce Rstudio
+2a) use Rstudio
+A very useful program to look into is RStudio. RStudio is a slightly smaller version of R that makes
+viewing graphs, etc much easier. It installs on your machine but requires you to first have R installed (see 1). I tend to use this version for everything I do.
+
+2b) use Rstudio online
+This is what we will do for this course. RStudio Server has the advantage of having a really nice
+interface to work with, especially when you are learning the language. The software can be run on a
+virtual machine, meaning I can set up all the libraries, etc. that you will need. I can provide you all with exactly the same hardware, software versions, etc. regardless of what is on your laptop making everyone’s lives easier. You can also use the publicly available image (on Jetstream) to run the same set up whenever you’d like.
+
+Libary Loading 
+In RStudio, this is easy. On the right frame, there is a section of tabs – one is labeled packages. This will list all the installed packages, which you can just click on or off. The code to do it manually will be written in the terminal, for your interest.
+If you want to install a package, you can click “Install Package” and follow the prompts. This only works if you want code from the repositories (CRAN, Bioconductor). If you want custom downloaded code, you will have to do it the command line way!
+
+library(maptools)
+library(maps)
+library(mapdata)
+library(ggmap)
+library(lattice)
+
+Command structure and how to get help
+Functions in R are similar – the name of the function starts things off, followed by options and inputs, but in a slightly different format.
+
+command(filename, option);
+
+cat("word","are","here","\n", sep=",")
+
+The major difference is that R functions have the options in a defined order and within parentheses.
+You can find out what the options are and what order you are to enter in the information by typing ?command:
+
+?cat
+
+One reason I love RStudio is it automatically gives you a heads up on what is expected and prints out
+the information in its own little frame.  Also, just like in bash, there are defaults to the functions. For example, the cat function is as follows:
+
+cat(... , file = "", sep = " ", fill = FALSE, labels = NULL, append = FALSE)
+
+Any time you see something defined, such as sep = “ ” – it’s a default! You can skip this part of the call if you want, which is why our first cat call (😊😊) was so much shorter than all of these options!
+
+This may seem like a trivial point – but it is critical! ?function is going to help you read any code that you run across and also use new functions, look for options, and generally function within R. It is the dictionary to help you in learning the new language. Also, this let’s you see the difference between a function and a variable immediately – if you don’t see (), even empty ones like q(), it is not a function; it is a variable! Again, this is immensely useful in reading other people’s code!!
+
+*********Some basics of graphing:
+	xlim - x limits - what you want your x axis to be
+	ylim - y limits - what you want your y axis to be
+	c() - this is a means of telling R that you want to give it two or more data "bits", but save them as one thing.
+		i.e. xlim=c(0,10)
+	plot() - how would you get information about this?
+
+********Let's make a world map
+
+Commands:
+data(wrld_simpl)
+
+But where is this coming from?
+?data -> built in
+
+Let's plot that to see what we have
+plot(wrld_simpl)
+
+Oo.. pretty!  Let's zoom in - almost everything in mapping is based on lat and long.  Unfortunately, we usually think of these as lat, long - but graphing programs want them as x and y.  So, so zoom in to 130W to 60W by 25N to 53N, we have to do the following:
+
+xlim=c(-130,-60)
+ylim=c(25,53)
+plot(wrld_simpl,xlim=xlim,ylim=ylim)
+
+Why do things in three steps?  Because it is easier to edit!
+
+We can also give it some color
+
+plot(wrld_simpl,xlim=xlim,ylim=ylim,col='olivedrab3',bg='lightblue')	
+
+How do we know these options exist?  Help! (bg is actually not documented)
+
+*********Let's map some points
+First let's look at how variables work:
+	Variables - vectors/scalars
+Scalars are the simplest data type - numbers, strings, and boolean values. This is what we generally
+used in Unix.
+
+myvar = “hi”;
+myvar = FALSE;
+myvar = 5.2;
+myvar = 6;
+gene_name = “MDR1”;
+
+Note that R does not require us to declare variables before we put data in them. However, if we try to
+pull data out of a variable that doesn’t exist yet, R will give an error:
+
+print(mychar)
+Error in print(mychar) : object 'mychar' not found
+
+But printing defined variables works just fine:
+print(gene_name)
+
+How does R know what kind of data you have in a variable? Are all things treated the same?
+Well, we cannot add and multiply letters, so there is clearly some “data typing”. If you look closely at the commands we used, there are some clear indicators that R uses – strings use “”, integers only
+contain [0-9]*, floats contain [0-9]*.[0-9*], and boolean values are in all caps.
+
+
+What happens if we don’t give it the “” when defining a string?
+R thinks it’s a variable! myvar = gene_name is perfectly legitimate code, but both must be defined
+variables first.
+
+Why can’t R operate on variables that are not defined yet? Bash does…
+Bash assumes everything is a string, and if undefined, it is “”. R has more nuanced types with different rules for each – meaning it cannot tell if the operation you are trying to execute is valid on the data until R knows what it is looking at. Because R works with objects, and objects behave differently, it must know what class of object the data is before it can decide what are permissible functions on that object.
+
+	variables - data frame/matrix
+		STEAL FROM R WORKSHOP
+		example:coords <- matrix(c(-86.5,-86.23, 39.577,41.7),ncol=2)
+##########PARE THIS DOWN##################
+Matrices
+Matrices are 2-dimensional grids of data. All cells must be of the same ‘type’ of scalar.
+
+#Generates a matrix from a vector (1:20), with a givennumber of rows and columns.
+
+y = matrix(1:20, nrow=5, ncol=4);
+
+We can also fill a matrix by rows instead of columns, using an option called byrow:
+
+a = matrix(c(1,2,3,4), nrow=2, ncol=2, byrow=TRUE);
+
+We can also read it in from a file:
+
+a = as.matrix(read.table(“matrix.dat”));
+a = as.matrix(read.table(“matrixheader.data”, header = TRUE, row.names = 1));
+
+The standard separator for read.table is whitespace. To do a csv file (comma separate values), you can
+use read.csv, or in your read.table function you can set sep = “,”.
+
+We can also subset matrices. This is extremely common place in use, as we usually deal with one
+column or one subset of rows for an analyses, be they sample groups or genes of interest, etc.
+
+y[3,] -> 3rd row
+y[,4] -> 4th column
+y[3,4] -> element at row 3, col 4
+y[1:3,2:4] -> submatrix of rows 1-4 and cols 2-5
+nrow(y) -> number of rows in y
+ncol(y) -> number of cols in y
+
+Data Frames
+Data frames are like matrices, but each column can be a different type. This is likely the data type you will use most, since one column can be gene names (strings), one can be e-values of hits (numbers), another can be bit scores, etc. Columns can also be named, which really comes in handy.
+
+We pretty much do not initiate data frames, we load them in from files.
+
+Reading a Data Frame from a File
+
+If the first line is a header describing columns:
+
+mydata = read.table(“filename.txt”, header = TRUE);
+
+If there is no header line and you want to name columns:
+
+mydata = read.table(“filename.txt”, col.names = c(“GeneID”, “e-value”,...));
+
+We can also set colnames and rownames after the fact, using:
+
+col.names(mydata) = c(“GeneID”, “e-value”...);
+row.names(mydata) = c(“MDR1”, “MDR2”...);
+
+For example:
+
+mydata = read.table(“~/Desktop/BlastResults.txt”, header=TRUE, row.names=1);
+
+You can click on the file in the top right frame to see the file that was loaded.
+
+Subsetting Data Frames
+Extracting columns:
+
+bitscore = mydata[c(“bitscore”)];
+
+Extracting rows:
+goodhits = subset(mydata, evalue < 1e-35);
+nrow(mydata);
+nrow(goodhits);
+
+Getting a vector of column names:
+colNames = names(mydata);
+
+To get the row names of a dataframe just call:
+row.names(mydata);
+
+You can also use data from variables in these calls – this is extremely useful.
+gene_names = c(“RS_Coff_Set1_k35__NODE_10000_length_673_cov_23.3871”,
+“RS_Coff_Set1_k35__NODE_10001_length_673_cov_65.9248”);
+hitsofinterest = subset(mydata, rownames(mydata) %in% gene_names);
+print(hitsofinterest);
+hitsofinterest[c(“bitscore”,”length”)];
+
+$###########################
+
+Commands:
+let's plot points on IU and ND
+
+coords <- matrix(c(-86.5,-86.23, 39.577,41.7),ncol=2)
+
+Do you follow this command?
+
+coords <- coordinates(coords)
+
+What is coordinates doing? How do you know?  What package is it from?
+	#creates a spatial object
+
+Brief Commentary on Objects
+Objects can be a bit of a difficult concept at first, but I will give you a brief introduction.
+Imagine a car. While everyone will have a slightly different mental image, there will be common
+aspects to everyone’s idea of a car. It will have certain characteristics – four wheels, doors,
+windshield, transmission, color, model, year, etc. It will also have certain basic functions – drive
+forward, go in reverse, park. 
+
+Imagine a dog. Same thing – everyone will have slightly different mental images of a dog – but they
+will all have similar characteristics and functions (run, drool, etc). But the functions and characteristics are not necessarily shared between dogs and cars… you wouldn’t expect to be able to put a dog in drive or a car to drool. You wouldn’t expect a transmission type of a dog or a breed of car. This is because they are different classses of objects.
+
+My individual dog object, Ellie, is a specific instance of the class of object, Dog. My specific instance of Car, 2008 RAV4, is a specific instance of the class Car. But even if you don’t know the specifics of those objects, you can make some pretty good guesses on what are logical things to do with any member of dog or car class.
+
+This is how R and many other languages work – they have defined classes of data – scalars, matrices,
+vectors – that all have specific characteristics and functions that are built into that class. Every object of that class type has those features, while other classes may not.
+
+spoints <- SpatialPoints(coords)
+
+What about SpatialPoints?
+	#creates a spatial data frame
+
+df <- data.frame(location=c("IU","ND"))
+
+Let's look at what df did:
+
+df
+
+#made us a little dataframe from out object!
+
+spointsdf <- SpatialPointsDataFrame(spoints,df)
+plot(spointsdf,add=T,col=c('red','blue'),pch=16)
+
+********
+
+let's plot the borders of the province of Colorado because they're easy to draw (but not to spell!)
+
+coords <- matrix(c(-109,-102,-102,-109,-109,37,37,41,41,37),ncol=2)
+l <- Line(coords)	#wanna guess what this one does??
+ls <- Lines(list(l),ID="1")	#breaks it into coordinates
+sls <- SpatialLines(list(ls))	#converts it to spatial object
+plot(sls,add=T,col='black')	#plots spatial object
+
+
+Again, but let's fill it in!
+coords <- matrix(c(-109,-102,-102,-109,-109,37,37,41,41,37),ncol=2)
+p <- Polygon(coords)
+ps <- Polygons(list(p),ID="1")
+sps <- SpatialPolygons(list(ps))
+plot(sps,add=T,col='black')  
+
+Nicer maps
+
+Commands:
+?getData
+USA <- getData('GADM', country="USA", level=1)
+
+plot(USA)
+
+Hmm, that looks like it would fit in our world map... they're both raster objects, let's see...
+plot(wrld_simpl)
+
+How would you add the USA plot?
+#plot(USA, add=TRUE)
+
+But what are we plotting?  Let's look:
+USA
+
+We can see that the names of the states are in USA$NAME_1, so lets use that to extract states... So, we need to grab the data that exists in USA$NAME_1 is equal to the state we want...
+
+So for Indiana,
+
+IN <- USA[USA$NAME_1=="Indiana",]
+#BREAK THIS DOWN
+
+plot(IN,col="red")
+
+Let's do the same for a couple other states that surround!
+Plot IL, OH, and MI - how do you "add" them??
+
+IL <- USA[USA$NAME_1=="Illinois",]
+plot(IL,col="grey", add=TRUE)
+
+OH <- USA[USA$NAME_1=="Ohio",]
+plot(OH,col="grey", add=TRUE)
+
+MI <- USA[USA$NAME_1=="Michigan",]
+plot(MI,col="grey", add=TRUE)
+
+monitors <- read.table(header=T, text='
++   monitorid        lat        long   datum                    name            
++           1   41.60668  -87.304729   WGS84              Gary-IITRI
++           2  39.811097  -86.114469   WGS84  Indpls-Washington-Park
++           3  39.749019  -86.186314   WGS84      Indpls-Harding-St.
++           4  38.013248  -87.577856   WGS84  Evansville-Buena-Vista
++           5  39.159383  -86.504762   WGS84             Bloomington
++           6  39.997484  -86.395172   WGS84              Whitestown
++                        ')
+> points(x = monitors$long, y = monitors$lat)
+> map(database = 'county', regions = 'indiana')
+> points(x = monitors$long, y = monitors$lat, pch = 19, col = 'red')
+> map.text(database = 'county', regions = 'indiana')
+> points(x = monitors$long, y = monitors$lat, pch = 19, col = 'red')
+
+We can go one further - we can add cities, with information about the cities.  Let's plot points in Toledo, Notre Dame, and Bloomington and make the size of the marker equal to their populations.
+
+points(x=c(-83.53,-86.23,-86.5),y=c(41.65,41.7,39.17), pch=19, col='red')
+
+
+#define our matrix of coordinates
+coords <- matrix(cbind(lon=c(-83.53,-86.23,-86.5),lat=c(41.65,41.7,39.17)),ncol=2)
+
+#convert those into coordinate object
+coords <- coordinates(coords)
+
+#convert into spatial object
+spoints <- SpatialPoints(coords)
+
+#store the location names and the populations as a dataframe
+df <- data.frame(location=c("Toledo","Notre Dame","Bloomington"),pop=c(278508,5973,84465))
+
+#Add this information to the points
+spointsdf <- SpatialPointsDataFrame(spoints,df)
+
+#make the spots scale
+scalefactor <- sqrt(spointsdf$pop)/sqrt(max(spointsdf$pop))
+
+#plot!
+plot(spointsdf,add=TRUE,col='black',pch=16,cex=scalefactor*10)    
+
+
+********How will I ever remember this???
+You don't need to!
+
+Things that are generally important in any computer language:
+	structure of language
+	types of data it works with
+	how to see what any data looks like
+	how to find help with commands
+	how to find help in general
+
+*******One more pretty example: Google Maps Map
+
+The ggmap package for Google Maps:
+This package is great particularly if you are familiar with the ggplot2 plotting grammar (super popular graphing package). You may also come across the RgoogleMaps package, but I do not recommend using it because it seems to have a grammar unique to that package (i.e. not compatible with base plotting or ggplot2) and has strange scaling behaviour.
+
+?get_map
+google <- get_map(location = c(-86.7,39.17), zoom = 14, maptype = "satellite")
+p <- ggmap(google)  #make it an object!
+p #view it
+p + geom_point(aes(x=c(-86.516493),y=c(39.170948)),colour='red')+geom_point(x=c(-86.501726),y=c(39.172067),colour="red") add some points!
+
+Can also do geom_path and geom_line
